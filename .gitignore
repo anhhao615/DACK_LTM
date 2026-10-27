@@ -1,0 +1,29 @@
+# Compiled Java / NetBeans
+build/
+dist/
+nbproject/private/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.env
+venv/
+.env
+
+# Database & runtime files
+*.db
+*.db-shm
+*.db-wal
+cloudflared.log
+
+# Upload / storage / quarantine directories
+quarantine_zone/
+secure_storage/
+data_store/
+
+# OS / Editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

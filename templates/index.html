@@ -1,0 +1,1504 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HỆ THỐNG QUẢN LÝ TRUY CẬP TỆP TIN TỪ XA VỚI XÁC THỰC VÀ ỦY QUYỀN (AUTHORIZATION)</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome 6 Icons CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <!-- Custom Modern Theme Styles -->
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col font-sans antialiased selection:bg-blue-600 selection:text-white">
+
+  <!-- ===================================================================== -->
+  <!-- 1. MÀN HÌNH ĐĂNG NHẬP (CLEAN WHITE & BLUE LOGIN PORTAL) -->
+  <!-- ===================================================================== -->
+  <div id="view-login" class="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-8 min-h-screen bg-gradient-to-br from-blue-50/70 via-white to-slate-100">
+    <div class="max-w-xl w-full space-y-6">
+      
+      <!-- Brand & Header -->
+      <div class="text-center space-y-3">
+        <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-blue-50 border border-blue-200 text-blue-600 shadow-md">
+          <i class="fa-solid fa-shield-halved text-3xl"></i>
+        </div>
+        <div>
+          <h1 class="text-lg sm:text-2xl font-black tracking-tight text-slate-900 leading-snug uppercase">
+            HỆ THỐNG QUẢN LÝ TRUY CẬP TỆP TIN TỪ XA
+          </h1>
+          <p class="text-xs sm:text-sm text-blue-600 font-extrabold uppercase tracking-wide mt-1">
+            VỚI XÁC THỰC VÀ ỦY QUYỀN (AUTHORIZATION)
+          </p>
+          <div class="inline-flex items-center space-x-1.5 px-3.5 py-1 mt-2.5 rounded-full bg-blue-50 border border-blue-200 text-[11px] text-blue-700 font-semibold shadow-sm">
+            <span class="w-2 h-2 rounded-full bg-blue-600 animate-ping"></span>
+            <span>Phòng thủ chiều sâu 6 lớp • Zero-Trust Security • RBAC & ACL</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Khung Đăng Nhập Chính (Clean White Card) -->
+      <div class="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-xl shadow-blue-500/5 space-y-5">
+        <div>
+          <h2 class="text-lg font-bold text-slate-900">Đăng nhập tài khoản</h2>
+          <p class="text-xs text-slate-500 mt-0.5">Vui lòng nhập thông tin xác thực để truy cập kho tài liệu bảo mật</p>
+        </div>
+
+        <!-- Form Đăng Nhập -->
+        <form onsubmit="App.handleLoginForm(event)" class="space-y-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Tên đăng nhập (Username)</label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                <i class="fa-solid fa-user text-sm"></i>
+              </span>
+              <input type="text" id="login-username" required placeholder="Nhập tên đăng nhập" class="w-full bg-slate-50 border border-slate-300 rounded-xl pl-10 pr-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+            </div>
+          </div>
+
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Mật khẩu (Password)</label>
+              <div class="flex items-center space-x-2">
+                <button type="button" onclick="App.togglePasswordVisibility()" class="text-xs text-slate-500 hover:text-slate-700 font-medium transition">
+                  <span id="pwd-toggle-text">Hiện</span>
+                </button>
+                <span class="text-slate-300">•</span>
+                <button type="button" onclick="App.openForgotPasswordModal()" class="text-xs text-blue-600 hover:text-blue-800 font-semibold transition" title="Khôi phục lại mật khẩu">
+                  Quên mật khẩu?
+                </button>
+              </div>
+            </div>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                <i class="fa-solid fa-lock text-sm"></i>
+              </span>
+              <input type="password" id="login-password" required placeholder="••••••••" class="w-full bg-slate-50 border border-slate-300 rounded-xl pl-10 pr-10 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+              <button type="button" onclick="App.togglePasswordVisibility()" class="absolute inset-y-0 right-0 flex items-center pr-3.5 text-slate-400 hover:text-slate-600">
+                <i id="pwd-eye-icon" class="fa-solid fa-eye text-sm"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Thông báo lỗi & Cảnh báo khóa tài khoản khi nhập sai -->
+          <div id="login-error-msg" class="hidden p-3.5 rounded-xl border text-xs flex items-start space-x-2.5 transition">
+            <i id="login-error-icon" class="fa-solid fa-circle-exclamation mt-0.5 text-sm flex-shrink-0"></i>
+            <div class="flex-1">
+              <div id="login-error-title" class="font-bold mb-0.5">Thông báo xác thực</div>
+              <div id="login-error-text" class="leading-relaxed">Thông tin đăng nhập không hợp lệ</div>
+            </div>
+          </div>
+
+          <button type="submit" id="btn-login-submit" class="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold text-sm shadow-md shadow-blue-600/25 transition flex items-center justify-center space-x-2">
+            <span>Đăng Nhập Vào Hệ Thống</span>
+            <i class="fa-solid fa-arrow-right"></i>
+          </button>
+
+          <!-- Phân cách & Nút Đăng ký tài khoản mới -->
+          <div class="relative flex items-center justify-center pt-2">
+            <div class="border-t border-slate-200 w-full"></div>
+            <span class="absolute bg-white px-3 text-[11px] text-slate-400 font-medium uppercase">hoặc</span>
+          </div>
+
+          <button type="button" onclick="App.openRegisterModal()" class="w-full py-2.5 rounded-xl bg-blue-50 hover:bg-blue-100 active:bg-blue-200 text-blue-700 font-bold text-xs border border-blue-200 transition flex items-center justify-center space-x-2">
+            <i class="fa-solid fa-user-plus text-blue-600"></i>
+            <span>Đăng Ký Tài Khoản Mới</span>
+          </button>
+
+          <!-- Quy định An toàn Đăng nhập & Duyệt tài khoản -->
+          <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-[11px] text-slate-600 space-y-1">
+            <div class="flex items-center space-x-1.5 font-bold text-slate-800">
+              <i class="fa-solid fa-shield-halved text-blue-600"></i>
+              <span>Chính Sách An Toàn Truy Cập:</span>
+            </div>
+            <p>• Nhập sai mật khẩu <strong>3 lần liên tiếp</strong> sẽ bị <strong>KHÓA TÀI KHOẢN</strong>. Chỉ Admin mới có quyền mở khóa.</p>
+            <p>• Tài khoản mới đăng ký phải được <strong>Quản trị viên (Admin) phê duyệt</strong> trước khi đăng nhập.</p>
+          </div>
+        </form>
+
+      </div>
+
+      <!-- Hộp Thoại Link Truy Cập Toàn Cầu & LAN -->
+      <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-md space-y-2.5 text-xs">
+        <div class="flex items-center justify-between text-slate-800 font-bold border-b border-slate-100 pb-2">
+          <span class="flex items-center space-x-1.5 text-blue-700">
+            <i class="fa-solid fa-earth-americas text-blue-600"></i>
+            <span>Link Truy Cập Mạng Cho Thiết Bị Khác</span>
+          </span>
+          <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold">Online</span>
+        </div>
+
+        <div class="space-y-2 text-[11px]">
+          <!-- Link Toàn Cầu (4G, Wi-Fi bất kỳ) -->
+          <div class="flex items-center justify-between bg-indigo-50 border border-indigo-200 p-2.5 rounded-xl">
+            <div class="truncate mr-2">
+              <div class="font-extrabold text-indigo-900 flex items-center space-x-1">
+                <span class="w-2 h-2 rounded-full bg-indigo-600 animate-ping"></span>
+                <span>Internet / 4G (Gửi cho người ở xa):</span>
+              </div>
+              <a id="login-public-link" href="#" target="_blank" class="font-mono text-indigo-700 font-bold text-xs hover:underline block truncate mt-0.5">Đang khởi tạo link...</a>
+            </div>
+            <button type="button" onclick="App.copyPublicUrl()" class="px-2.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-sm transition flex-shrink-0 flex items-center space-x-1">
+              <i class="fa-regular fa-copy"></i>
+              <span>Copy Link</span>
+            </button>
+          </div>
+
+          <!-- Link Mạng LAN Nội Bộ -->
+          <div class="flex items-center justify-between bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-slate-600">
+            <div class="truncate mr-2">
+              <span class="font-bold text-slate-800">🏠 Mạng LAN (Cùng Wi-Fi):</span>
+              <span id="login-lan-ip" class="font-mono text-blue-700 font-bold ml-1">http://...</span>
+            </div>
+            <button type="button" onclick="App.copyLanUrl()" class="px-2.5 py-1 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold text-xs transition flex-shrink-0">
+              Copy LAN
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3 Lớp Bảo Mật Footer Indicators -->
+      <div class="flex items-center justify-center space-x-4 text-[11px] text-slate-500 font-medium">
+        <span class="flex items-center space-x-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span><span>Proxy Gateway</span></span>
+        <span class="flex items-center space-x-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span><span>App Firewall</span></span>
+        <span class="flex items-center space-x-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span><span>Antivirus Scanner</span></span>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ===================================================================== -->
+  <!-- 2. KHÔNG GIAN LÀM VIỆC LƯU TRỮ CHÍNH (WHITE & BLUE CORPORATE THEME) -->
+  <!-- ===================================================================== -->
+  <div id="view-app" class="hidden flex-1 flex flex-col min-h-screen">
+
+    <!-- Top Navigation Bar -->
+    <header class="bg-white/95 border-b border-slate-200 sticky top-0 z-40 backdrop-blur-md shadow-sm">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
+        
+        <!-- Logo & Brand (Cố định không bao giờ bị bóp méo vỡ dòng) -->
+        <div class="flex items-center space-x-2.5 cursor-pointer flex-shrink-0" onclick="App.navigateTo('/')">
+          <div class="w-10 h-10 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600 shadow-sm flex-shrink-0">
+            <i class="fa-solid fa-shield-halved text-xl"></i>
+          </div>
+          <div class="hidden sm:flex flex-col justify-center flex-shrink-0 leading-tight">
+            <div class="flex items-center space-x-2 whitespace-nowrap">
+              <span class="text-xs lg:text-sm font-extrabold tracking-tight text-slate-900 uppercase">
+                QUẢN LÝ TRUY CẬP TỆP TIN TỪ XA
+              </span>
+              <span class="hidden lg:inline text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-blue-50 text-blue-700 border border-blue-200 uppercase tracking-tight">
+                AuthN & AuthZ
+              </span>
+            </div>
+            <span class="text-[10px] text-blue-600 font-bold uppercase tracking-wider whitespace-nowrap mt-0.5">
+              XÁC THỰC VÀ ỦY QUYỀN (AUTHORIZATION)
+            </span>
+          </div>
+        </div>
+
+        <!-- Thanh Tìm Kiếm Tức Thì (Instant Search - Tự co giãn theo màn hình) -->
+        <div class="flex-1 max-w-xs lg:max-w-sm hidden md:block min-w-0 mx-1">
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+              <i class="fa-solid fa-magnifying-glass text-xs"></i>
+            </span>
+            <input type="text" id="global-file-search" oninput="App.handleSearchFiles(this.value)" placeholder="Tìm kiếm nhanh tệp tin..." class="w-full bg-slate-100/80 border border-slate-200 rounded-xl pl-9 pr-3 py-1.5 text-xs text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition">
+          </div>
+        </div>
+
+        <!-- Các huy hiệu kết nối & Người dùng (flex-shrink-0) -->
+        <div class="flex items-center space-x-2 sm:space-x-2.5 flex-shrink-0">
+          
+          <!-- Huy hiệu Trạng thái Database -->
+          <div id="nav-db-status" class="hidden 2xl:flex items-center space-x-1.5 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-xl text-xs text-emerald-800 font-medium flex-shrink-0" title="Cơ sở dữ liệu đang kết nối và lưu trữ trực tiếp">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span class="font-bold">Database:</span>
+            <span id="nav-db-count" class="font-mono text-emerald-700">Đã đồng bộ</span>
+          </div>
+
+          <!-- Huy hiệu Link Toàn Cầu (4G / Wi-Fi khác) -->
+          <div id="nav-public-wrap" class="flex items-center space-x-1.5 bg-indigo-50 border border-indigo-200 px-2.5 py-1.5 rounded-xl text-xs shadow-sm flex-shrink-0" title="Đường link truy cập từ xa qua Internet (4G, Wi-Fi khác ở bất kỳ đâu)">
+            <span class="w-2 h-2 rounded-full bg-indigo-600 animate-pulse"></span>
+            <span class="text-indigo-900 font-bold hidden sm:inline whitespace-nowrap">Link 4G:</span>
+            <span id="nav-public-url" class="font-mono text-indigo-700 font-bold max-w-[120px] sm:max-w-[150px] truncate">Đang kích hoạt...</span>
+            <button onclick="App.copyPublicUrl()" class="text-indigo-600 hover:text-indigo-800 ml-1 p-0.5 font-semibold" title="Sao chép link gửi cho người ở xa">
+              <i class="fa-regular fa-copy"></i>
+            </button>
+          </div>
+
+          <!-- Huy hiệu Mạng LAN (Đa Thiết Bị) -->
+          <div class="hidden xl:flex items-center space-x-1.5 bg-blue-50/70 border border-blue-100 px-2.5 py-1.5 rounded-xl text-xs flex-shrink-0" title="Địa chỉ truy cập qua mạng LAN cho điện thoại hoặc máy khác">
+            <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+            <span class="text-slate-600 font-medium whitespace-nowrap">Mạng LAN:</span>
+            <span id="nav-lan-ip" class="font-mono text-blue-700 font-bold max-w-[120px] truncate">http://...</span>
+            <button onclick="App.copyLanUrl()" class="text-blue-600 hover:text-blue-800 ml-1 p-0.5 font-semibold" title="Sao chép địa chỉ">
+              <i class="fa-regular fa-copy"></i>
+            </button>
+          </div>
+
+          <!-- Thông tin Người Dùng & Nút Đăng Xuất -->
+          <div class="flex items-center space-x-1.5 sm:space-x-2 bg-slate-100/80 border border-slate-200 p-1 sm:px-2.5 sm:py-1.5 rounded-xl flex-shrink-0">
+            <!-- Avatar tròn -->
+            <div id="user-avatar" class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-blue-100 border border-blue-300 flex items-center justify-center font-bold text-xs text-blue-700 shadow-sm flex-shrink-0">
+              U
+            </div>
+            
+            <div class="hidden sm:block text-left">
+              <div class="flex items-center space-x-1">
+                <span id="nav-fullname" class="text-xs font-bold text-slate-900 truncate max-w-[90px] lg:max-w-[120px]">Người dùng</span>
+                <span id="nav-role" class="text-[9px] px-1.5 py-0.2 rounded font-bold bg-slate-200 text-slate-700">USER</span>
+              </div>
+              <div id="nav-username" class="text-[10px] text-slate-500 font-mono">@user</div>
+            </div>
+
+            <!-- Nút Đăng Xuất -->
+            <button onclick="App.handleLogout()" class="ml-1 p-1.5 sm:px-2.5 sm:py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-xs font-semibold transition flex items-center space-x-1 flex-shrink-0" title="Đăng xuất và thu hồi Token JWT">
+              <i class="fa-solid fa-right-from-bracket"></i>
+              <span class="hidden md:inline text-[11px]">Đăng xuất</span>
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+    </header>
+
+
+    <!-- Thân Ứng Dụng (2 Cột: Sidebar + Main Content) -->
+    <div class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 flex flex-col md:flex-row gap-6">
+
+      <!-- =================================================================== -->
+      <!-- CỘT TRÁI: SIDEBAR ĐIỀU HƯỚNG MÀU TRẮNG XANH -->
+      <!-- =================================================================== -->
+      <aside class="w-full md:w-64 flex-shrink-0 space-y-5">
+        
+        <!-- Nút Tải Lên Nhanh -->
+        <button onclick="App.showUploadModal()" class="w-full py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold text-sm shadow-md shadow-blue-500/25 transition flex items-center justify-center space-x-2">
+          <i class="fa-solid fa-cloud-arrow-up text-base"></i>
+          <span>Tải Lên Tệp Tin</span>
+        </button>
+
+        <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-4">
+          <!-- Menu Điều Hướng Chính -->
+          <nav class="space-y-1">
+            <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-3 mb-2">Kho Tệp Tin</div>
+
+            <button onclick="App.navigateToTab('files', '/')" id="sidebar-btn-root" class="sidebar-item active w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 transition">
+              <span class="flex items-center space-x-2.5">
+                <i class="fa-solid fa-hard-drive text-sm text-blue-600"></i>
+                <span>Tất cả tệp tin (Gốc)</span>
+              </span>
+              <span class="text-[10px] text-slate-400 font-mono">/</span>
+            </button>
+
+            <button onclick="App.navigateToTab('files', '/projects')" id="sidebar-btn-projects" class="sidebar-item w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-medium text-slate-700 hover:text-blue-600 hover:bg-slate-50 border border-transparent transition">
+              <span class="flex items-center space-x-2.5">
+                <i class="fa-solid fa-diagram-project text-sm text-blue-600"></i>
+                <span>Thư mục Dự án</span>
+              </span>
+              <span class="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">Đọc/Ghi</span>
+            </button>
+
+            <button onclick="App.navigateToTab('files', '/company_policies')" id="sidebar-btn-policies" class="sidebar-item w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-medium text-slate-700 hover:text-blue-600 hover:bg-slate-50 border border-transparent transition">
+              <span class="flex items-center space-x-2.5">
+                <i class="fa-solid fa-book-bookmark text-sm text-amber-500"></i>
+                <span>Quy chế Công ty</span>
+              </span>
+              <span class="text-[10px] text-amber-600 font-bold bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">Chỉ đọc</span>
+            </button>
+
+            <button onclick="App.navigateToTab('files', '/hr_confidential')" id="sidebar-btn-hr" class="sidebar-item w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-medium text-slate-700 hover:text-blue-600 hover:bg-slate-50 border border-transparent transition">
+              <span class="flex items-center space-x-2.5">
+                <i class="fa-solid fa-lock text-sm text-rose-500"></i>
+                <span>Nhân sự tuyệt mật</span>
+              </span>
+              <span class="text-[10px] text-rose-600 font-bold bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">Admin</span>
+            </button>
+
+            <button onclick="App.switchTab('antivirus')" id="sidebar-btn-quarantine" class="sidebar-item w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-medium text-slate-700 hover:text-blue-600 hover:bg-slate-50 border border-transparent transition">
+              <span class="flex items-center space-x-2.5">
+                <i class="fa-solid fa-biohazard text-sm text-purple-600"></i>
+                <span>Kho cách ly mã độc</span>
+              </span>
+              <span id="sidebar-quarantine-count" class="text-[10px] px-1.5 py-0.2 rounded-full bg-purple-50 text-purple-700 border border-purple-200 font-bold">0</span>
+            </button>
+          </nav>
+
+          <!-- Menu Quản Trị & Bảo Mật SOC (Dành cho Admin) -->
+          <div class="admin-only space-y-1 pt-3 border-t border-slate-100">
+            <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-3 mb-2 flex items-center justify-between">
+              <span>An Ninh Mạng (SOC)</span>
+              <span class="text-[10px] px-1.5 py-0.2 rounded font-bold bg-purple-50 text-purple-700 border border-purple-200">ADMIN</span>
+            </div>
+
+            <button onclick="App.switchTab('logs')" id="tab-btn-logs" class="w-full flex items-center space-x-2.5 px-3 py-2.5 rounded-xl text-xs font-medium text-slate-700 hover:text-blue-600 hover:bg-slate-50 border border-transparent transition">
+              <i class="fa-solid fa-shield-halved text-sm text-blue-600"></i>
+              <span>Nhật ký Giám sát SOC</span>
+            </button>
+
+            <button onclick="App.switchTab('firewall')" id="tab-btn-firewall" class="w-full flex items-center space-x-2.5 px-3 py-2.5 rounded-xl text-xs font-medium text-slate-700 hover:text-blue-600 hover:bg-slate-50 border border-transparent transition">
+              <i class="fa-solid fa-fire text-sm text-rose-500"></i>
+              <span>Tường lửa & Quản lý IP</span>
+            </button>
+
+            <button onclick="App.switchTab('acl')" id="tab-btn-acl" class="w-full flex items-center space-x-2.5 px-3 py-2.5 rounded-xl text-xs font-medium text-slate-700 hover:text-blue-600 hover:bg-slate-50 border border-transparent transition">
+              <i class="fa-solid fa-key text-sm text-amber-500"></i>
+              <span>Ma trận Phân quyền ACL</span>
+            </button>
+
+            <button onclick="App.switchTab('users')" id="tab-btn-users" class="w-full flex items-center space-x-2.5 px-3 py-2.5 rounded-xl text-xs font-medium text-slate-700 hover:text-blue-600 hover:bg-slate-50 border border-transparent transition">
+              <i class="fa-solid fa-users-gear text-sm text-indigo-600"></i>
+              <span>Duyệt & Quản Lý Tài Khoản</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Widget Thông Tin Dung Lượng Bộ Nhớ -->
+        <div class="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-3">
+          <div class="flex items-center justify-between text-xs text-slate-700">
+            <span class="font-bold flex items-center space-x-1.5">
+              <i class="fa-solid fa-database text-blue-600"></i>
+              <span>Dung lượng Sandbox</span>
+            </span>
+            <span class="text-[11px] text-slate-500 font-medium">15 MB / File</span>
+          </div>
+          <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden border border-slate-200">
+            <div class="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full" style="width: 28%"></div>
+          </div>
+          <div class="flex items-center justify-between text-[11px] text-slate-500 font-mono">
+            <span>Đang sử dụng: 4.2 MB</span>
+            <span class="text-blue-600 font-bold">Tối ưu</span>
+          </div>
+        </div>
+
+      </aside>
+
+
+      <!-- =================================================================== -->
+      <!-- CỘT PHẢI: KHÔNG GIAN TỆP TIN & QUẢN TRỊ AN NINH CHÍNH -->
+      <!-- =================================================================== -->
+      <main class="flex-1 space-y-5 min-w-0">
+
+        <!-- TAB 1: TRÌNH QUẢN LÝ TỆP TIN (FILE EXPLORER) -->
+        <div id="tab-files" class="tab-pane space-y-4">
+          
+          <!-- Thanh Công Cụ Tệp (Toolbar) -->
+          <div class="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            
+            <!-- Breadcrumbs Điều Hướng -->
+            <div class="flex items-center space-x-1.5 text-xs sm:text-sm text-slate-800 overflow-x-auto w-full sm:w-auto py-1">
+              <span class="text-slate-400 mr-1"><i class="fa-solid fa-folder-tree"></i></span>
+              <div id="file-breadcrumbs" class="flex items-center space-x-1 font-mono">
+                <button onclick="App.navigateTo('/')" class="hover:text-blue-600 font-bold px-1.5 py-0.5 rounded hover:bg-slate-100">Trang chủ (/)</button>
+              </div>
+            </div>
+
+            <!-- Các Nút Hành Động & Chuyển Chế Độ Xem -->
+            <div class="flex items-center space-x-2 w-full sm:w-auto justify-end flex-wrap gap-y-2">
+              
+              <!-- Chuyển Đổi Chế Độ Xem Lưới / Danh Sách -->
+              <div class="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 mr-1">
+                <button onclick="App.setViewMode('grid')" id="btn-view-grid" class="p-1.5 rounded-lg text-xs text-blue-600 bg-white font-bold transition shadow-sm" title="Chế độ xem lưới (Grid View)">
+                  <i class="fa-solid fa-grip"></i>
+                </button>
+                <button onclick="App.setViewMode('list')" id="btn-view-list" class="p-1.5 rounded-lg text-xs text-slate-500 hover:text-slate-900 font-medium transition" title="Chế độ xem danh sách (List View)">
+                  <i class="fa-solid fa-list"></i>
+                </button>
+              </div>
+
+              <button onclick="App.refreshFiles()" id="btn-toolbar-refresh" class="p-2 sm:px-3 sm:py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold border border-slate-200 transition" title="Làm mới danh sách & Đồng bộ Database">
+                <i class="fa-solid fa-arrows-rotate"></i>
+                <span class="hidden sm:inline ml-1">Làm mới</span>
+              </button>
+
+              <button onclick="App.showRolesGuideModal()" class="px-2.5 py-2 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 text-xs font-semibold border border-purple-200 flex items-center space-x-1.5 transition" title="Xem bảng phân quyền chi tiết các chức năng & vai trò">
+                <i class="fa-solid fa-users-gear text-purple-600"></i>
+                <span class="hidden lg:inline">Phân quyền</span>
+              </button>
+
+              <button onclick="App.showNewFileModal()" id="btn-toolbar-new-file" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold border border-slate-200 flex items-center space-x-1.5 transition">
+                <i class="fa-solid fa-file-circle-plus text-blue-600"></i>
+                <span>Tạo tệp</span>
+              </button>
+
+              <button onclick="App.showNewFolderModal()" id="btn-toolbar-new-folder" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold border border-slate-200 flex items-center space-x-1.5 transition">
+                <i class="fa-solid fa-folder-plus text-amber-500"></i>
+                <span>Tạo thư mục</span>
+              </button>
+
+              <button onclick="App.showUploadModal()" id="btn-toolbar-upload" class="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/25 flex items-center space-x-1.5 transition">
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+                <span>Tải lên</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Thông Báo Quyền Hạn Thực Tế Của Thư Mục Hiện Tại -->
+          <div id="folder-permission-alert" class="p-3.5 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between text-xs bg-blue-50/60 border-blue-200 gap-2">
+            <div class="flex items-center space-x-2.5">
+              <div class="w-7 h-7 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center">
+                <i class="fa-solid fa-shield-halved text-sm"></i>
+              </div>
+              <div>
+                <span class="text-slate-700 font-medium">Quyền hạn của tài khoản trên thư mục này:</span>
+                <span id="folder-effective-badge" class="font-bold ml-1.5 px-2 py-0.5 rounded bg-white text-slate-900 border border-slate-200">-</span>
+              </div>
+            </div>
+            <div class="text-[11px] text-slate-500 font-mono">Đánh giá thời gian thực bởi Bộ máy ACL Engine</div>
+          </div>
+
+          <!-- Vùng Kéo Thả Tải Lên (Drag & Drop Zone Container) -->
+          <div id="drop-zone" class="relative">
+            
+            <!-- CHẾ ĐỘ XEM 1: DẠNG LƯỚI (GRID VIEW) -->
+            <div id="file-grid-container" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+              <!-- Render tự động qua JS -->
+            </div>
+
+            <!-- CHẾ ĐỘ XEM 2: DẠNG DANH SÁCH (LIST VIEW - TABLE) -->
+            <div id="file-list-container" class="hidden bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+              <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs sm:text-sm text-slate-800">
+                  <thead class="bg-slate-50 text-[11px] text-slate-500 uppercase font-bold border-b border-slate-200">
+                    <tr>
+                      <th scope="col" class="px-5 py-3">Tên tệp / Thư mục</th>
+                      <th scope="col" class="px-5 py-3">Quyền hạn ACL</th>
+                      <th scope="col" class="px-5 py-3">Kích thước</th>
+                      <th scope="col" class="px-5 py-3">Ngày cập nhật</th>
+                      <th scope="col" class="px-5 py-3 text-right">Thao tác</th>
+                    </tr>
+                  </thead>
+                  <tbody id="file-table-body" class="divide-y divide-slate-100">
+                    <!-- Render tự động qua JS -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Overlay Kéo Thả -->
+            <div id="drag-drop-overlay" class="absolute inset-0 rounded-2xl bg-blue-50/80 border-2 border-dashed border-blue-500 flex flex-col items-center justify-center opacity-0 pointer-events-none transition backdrop-blur-sm z-20">
+              <i class="fa-solid fa-cloud-arrow-up text-5xl text-blue-600 mb-3 animate-bounce"></i>
+              <div class="text-base font-bold text-slate-900">Thả tệp tin vào đây để tải lên ngay</div>
+              <div class="text-xs text-blue-700 mt-1 font-medium">Tệp sẽ được kiểm tra qua 4 bước quét Antivirus an toàn</div>
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- TAB 2: NHẬT KÝ KIỂM TOÁN AN NINH SOC (Admin) -->
+        <div id="tab-logs" class="tab-pane hidden space-y-5">
+          
+          <!-- Thẻ Chỉ Số Thống Kê Tổng Quan -->
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
+            <div class="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm">
+              <div class="text-xs text-slate-500 font-medium">Tổng số Request</div>
+              <div class="text-2xl font-extrabold text-slate-900 mt-1" id="stat-total">0</div>
+            </div>
+            <div class="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm">
+              <div class="text-xs text-emerald-600 font-bold">Yêu cầu Hợp lệ</div>
+              <div class="text-2xl font-extrabold text-emerald-600 mt-1" id="stat-allowed">0</div>
+            </div>
+            <div class="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm">
+              <div class="text-xs text-amber-600 font-bold">Chặn bởi ACL (AuthZ)</div>
+              <div class="text-2xl font-extrabold text-amber-600 mt-1" id="stat-authz-denied">0</div>
+            </div>
+            <div class="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm">
+              <div class="text-xs text-rose-600 font-bold">Chặn Firewall / Proxy</div>
+              <div class="text-2xl font-extrabold text-rose-600 mt-1" id="stat-firewall-blocked">0</div>
+            </div>
+            <div class="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm">
+              <div class="text-xs text-purple-600 font-bold">Mã độc Cách ly</div>
+              <div class="text-2xl font-extrabold text-purple-600 mt-1" id="stat-av-quarantined">0</div>
+            </div>
+          </div>
+
+          <!-- Bộ Lọc Trạng Thái & Nút Làm Mới -->
+          <div class="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center space-x-2.5 w-full sm:w-auto">
+              <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">Lọc sự kiện:</span>
+              <select id="log-status-filter" onchange="App.loadAuditLogs()" class="bg-slate-50 border border-slate-300 text-xs rounded-xl px-3 py-2 text-slate-800 focus:outline-none focus:border-blue-500 font-medium">
+                <option value="ALL">Tất cả sự kiện an ninh</option>
+                <option value="ALLOWED">ALLOWED (Thành công)</option>
+                <option value="DENIED_AUTHZ">DENIED_AUTHZ (Vi phạm quyền ACL)</option>
+                <option value="BLOCKED_FIREWALL">BLOCKED_FIREWALL (Chặn IP / Rate Limit)</option>
+                <option value="BLOCKED_PROXY">BLOCKED_PROXY (Chặn Path Traversal)</option>
+                <option value="QUARANTINED_AV">QUARANTINED_AV (Phát hiện mã độc)</option>
+                <option value="AUTHN_FAILED">AUTHN_FAILED (Đăng nhập thất bại)</option>
+              </select>
+            </div>
+
+            <div class="flex items-center space-x-3 w-full sm:w-auto justify-end">
+              <label class="flex items-center space-x-2 text-xs text-slate-600 font-medium cursor-pointer">
+                <input type="checkbox" id="auto-refresh-logs" checked onchange="App.toggleAutoRefreshLogs(this.checked)" class="rounded bg-slate-100 border-slate-300 text-blue-600 focus:ring-0">
+                <span>Tự động làm mới (3s)</span>
+              </label>
+              <button onclick="App.loadAuditLogs()" class="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow transition">
+                <i class="fa-solid fa-arrows-rotate mr-1"></i> Làm mới
+              </button>
+            </div>
+          </div>
+
+          <!-- Bảng Log An Ninh SOC -->
+          <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+            <div class="overflow-x-auto max-h-[550px] overflow-y-auto">
+              <table class="w-full text-left text-xs text-slate-800">
+                <thead class="bg-slate-50 text-slate-600 uppercase font-bold sticky top-0 z-10 border-b border-slate-200">
+                  <tr>
+                    <th class="px-4 py-3">Thời gian</th>
+                    <th class="px-4 py-3">Request ID</th>
+                    <th class="px-4 py-3">Địa chỉ IP</th>
+                    <th class="px-4 py-3">Người dùng</th>
+                    <th class="px-4 py-3">Hành động</th>
+                    <th class="px-4 py-3">Đường dẫn tài nguyên</th>
+                    <th class="px-4 py-3">Trạng thái</th>
+                    <th class="px-4 py-3">Lý do bảo mật</th>
+                  </tr>
+                </thead>
+                <tbody id="audit-log-body" class="divide-y divide-slate-100 font-mono text-[11px]">
+                  <!-- Nạp tự động qua JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+
+
+        <!-- TAB 3: TƯỜNG LỬA FIREWALL & RATE LIMIT (Admin) -->
+        <div id="tab-firewall" class="tab-pane hidden space-y-5">
+          <div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 gap-3">
+              <div>
+                <h3 class="text-base font-bold text-slate-900 flex items-center space-x-2">
+                  <i class="fa-solid fa-fire text-rose-500"></i>
+                  <span>Tường Lửa Ứng Dụng (Application Firewall)</span>
+                </h3>
+                <p class="text-xs text-slate-500 mt-1">Lọc địa chỉ IP Blacklist/Whitelist, chống tấn công Brute-force và kiểm soát tần suất truy cập Rate Limiting.</p>
+              </div>
+              <button onclick="App.showAddFirewallRuleModal()" class="px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold shadow transition">
+                <i class="fa-solid fa-plus mr-1"></i> Thêm Quy Tắc Lọc IP
+              </button>
+            </div>
+
+            <!-- Bảng Quy Tắc Firewall -->
+            <div class="bg-white border border-slate-200 rounded-xl overflow-hidden">
+              <table class="w-full text-left text-xs text-slate-800">
+                <thead class="bg-slate-50 text-slate-600 uppercase font-bold border-b border-slate-200">
+                  <tr>
+                    <th class="px-4 py-3">Mã ID</th>
+                    <th class="px-4 py-3">Địa chỉ IP</th>
+                    <th class="px-4 py-3">Loại quy tắc</th>
+                    <th class="px-4 py-3">Lý do khóa / Auto-Ban</th>
+                    <th class="px-4 py-3">Thời hạn hiệu lực</th>
+                    <th class="px-4 py-3 text-right">Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody id="firewall-rules-body" class="divide-y divide-slate-100 font-mono">
+                  <!-- Nạp tự động qua JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- TAB 4: ANTIVIRUS & KHU CÁCH LY (Admin & User) -->
+        <div id="tab-antivirus" class="tab-pane hidden space-y-5">
+          <div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm space-y-6">
+            <div class="pb-4 border-b border-slate-100">
+              <h3 class="text-base font-bold text-slate-900 flex items-center space-x-2">
+                <i class="fa-solid fa-biohazard text-purple-600"></i>
+                <span>Khu Vực Cách Ly Mã Độc (Quarantine Vault)</span>
+              </h3>
+              <p class="text-xs text-slate-500 mt-1">Các tệp tin vi phạm 4 bước quét Antivirus (Đuôi cấm, Magic Bytes, EICAR, Heuristic) sẽ bị cô lập tại đây kèm hồ sơ điều tra số.</p>
+            </div>
+
+            <!-- Bảng Tệp Bị Cách Ly -->
+            <div class="bg-white border border-slate-200 rounded-xl overflow-hidden">
+              <table class="w-full text-left text-xs text-slate-800">
+                <thead class="bg-slate-50 text-slate-600 uppercase font-bold border-b border-slate-200">
+                  <tr>
+                    <th class="px-4 py-3">Tên tệp gốc</th>
+                    <th class="px-4 py-3">Mã độc phát hiện</th>
+                    <th class="px-4 py-3">Bước phát hiện</th>
+                    <th class="px-4 py-3">Người gửi / IP</th>
+                    <th class="px-4 py-3">Thời gian</th>
+                    <th class="px-4 py-3 text-right">Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody id="quarantine-records-body" class="divide-y divide-slate-100 font-mono">
+                  <!-- Nạp tự động qua JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- TAB 5: MA TRẬN PHÂN QUYỀN ACL (Admin) -->
+        <div id="tab-acl" class="tab-pane hidden space-y-5">
+          <div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 gap-3">
+              <div>
+                <h3 class="text-base font-bold text-slate-900 flex items-center space-x-2">
+                  <i class="fa-solid fa-key text-amber-500"></i>
+                  <span>Ma Trận Phân Quyền Chi Tiết (Granular Matrix ACL)</span>
+                </h3>
+                <p class="text-xs text-slate-500 mt-1">Nguyên tắc thực thi: <strong>Explicit Deny > Allow > Inherited</strong> trên từng thư mục hoặc tệp tin.</p>
+              </div>
+              <button onclick="App.showAddACLRuleModal()" class="px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold shadow transition">
+                <i class="fa-solid fa-plus mr-1"></i> Thêm / Cấu hình Quy Tắc ACL
+              </button>
+            </div>
+
+            <!-- Bảng Ma Trận ACL -->
+            <div class="bg-white border border-slate-200 rounded-xl overflow-hidden">
+              <table class="w-full text-left text-xs text-slate-800">
+                <thead class="bg-slate-50 text-slate-600 uppercase font-bold border-b border-slate-200">
+                  <tr>
+                    <th class="px-4 py-3">Đường dẫn tài nguyên</th>
+                    <th class="px-4 py-3">Đối tượng (User / Role)</th>
+                    <th class="px-4 py-3 text-center">Đọc (Read)</th>
+                    <th class="px-4 py-3 text-center">Ghi (Write)</th>
+                    <th class="px-4 py-3 text-center">Xóa (Delete)</th>
+                    <th class="px-4 py-3 text-center">Cấm tuyệt đối (Deny)</th>
+                    <th class="px-4 py-3 text-right">Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody id="acl-rules-body" class="divide-y divide-slate-100 font-mono">
+                  <!-- Nạp tự động qua JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 6: QUẢN TRỊ & PHÊ DUYỆT TÀI KHOẢN (ADMIN ONLY) -->
+        <div id="tab-users" class="tab-pane hidden space-y-5">
+          
+          <!-- Banner & Tiêu đề Tab -->
+          <div class="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-200 pb-4">
+              <div>
+                <h3 class="text-base font-extrabold text-slate-900 flex items-center space-x-2">
+                  <i class="fa-solid fa-users-gear text-indigo-600"></i>
+                  <span>Quản Lý Phê Duyệt & Mở Khóa Tài Khoản</span>
+                </h3>
+                <p class="text-xs text-slate-500 mt-1">Phê duyệt tài khoản mới đăng ký, mở khóa tài khoản nhập sai 3 lần, và kiểm soát an ninh truy cập.</p>
+              </div>
+
+              <div class="flex items-center space-x-2">
+                <button onclick="App.loadSocUsers()" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold border border-slate-200 transition flex items-center space-x-1.5">
+                  <i class="fa-solid fa-arrows-rotate"></i>
+                  <span>Làm mới</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Thống kê 4 ô chỉ số trạng thái tài khoản -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+              <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+                <div class="text-slate-500 text-[11px] font-medium">Tổng tài khoản</div>
+                <div id="user-stat-total" class="text-xl font-extrabold text-slate-900 mt-1">0</div>
+              </div>
+              <div class="p-3.5 rounded-xl bg-amber-50 border border-amber-200">
+                <div class="text-amber-800 text-[11px] font-bold flex items-center space-x-1">
+                  <span class="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
+                  <span>Chờ Admin Duyệt</span>
+                </div>
+                <div id="user-stat-pending" class="text-xl font-extrabold text-amber-700 mt-1">0</div>
+              </div>
+              <div class="p-3.5 rounded-xl bg-rose-50 border border-rose-200">
+                <div class="text-rose-800 text-[11px] font-bold flex items-center space-x-1">
+                  <i class="fa-solid fa-lock text-rose-600"></i>
+                  <span>Bị Khóa (Sai 3 lần)</span>
+                </div>
+                <div id="user-stat-locked" class="text-xl font-extrabold text-rose-700 mt-1">0</div>
+              </div>
+              <div class="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200">
+                <div class="text-emerald-800 text-[11px] font-bold flex items-center space-x-1">
+                  <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                  <span>Đang Hoạt Động</span>
+                </div>
+                <div id="user-stat-active" class="text-xl font-extrabold text-emerald-700 mt-1">0</div>
+              </div>
+            </div>
+
+            <!-- Thanh tìm kiếm & lọc nhanh tài khoản -->
+            <div class="pt-1 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div class="w-full sm:w-80 relative">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                  <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                </span>
+                <input type="text" id="soc-user-search" oninput="App.filterSocUsers(this.value)" placeholder="Tìm kiếm tài khoản, họ tên..." class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3 py-1.5 text-xs text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition">
+              </div>
+
+              <div class="flex items-center space-x-2 text-xs text-slate-500">
+                <span>Lọc theo:</span>
+                <button onclick="App.filterSocUsersByStatus('ALL')" class="user-filter-btn px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 font-bold border border-blue-200 text-[11px]">Tất cả</button>
+                <button onclick="App.filterSocUsersByStatus('PENDING')" class="user-filter-btn px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px]">Chờ duyệt</button>
+                <button onclick="App.filterSocUsersByStatus('LOCKED')" class="user-filter-btn px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px]">Bị khóa</button>
+                <button onclick="App.filterSocUsersByStatus('ACTIVE')" class="user-filter-btn px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px]">Hoạt động</button>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Bảng Danh Sách Người Dùng -->
+          <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs text-slate-800">
+                <thead class="bg-slate-50 text-slate-600 uppercase font-bold border-b border-slate-200">
+                  <tr>
+                    <th class="px-4 py-3.5">Người dùng / Tài khoản</th>
+                    <th class="px-4 py-3.5">Phân quyền (Role)</th>
+                    <th class="px-4 py-3.5">Trạng thái xác thực</th>
+                    <th class="px-4 py-3.5 text-center">Lần sai MK</th>
+                    <th class="px-4 py-3.5">Ngày tạo / Lý do</th>
+                    <th class="px-4 py-3.5 text-right">Hành động của Admin</th>
+                  </tr>
+                </thead>
+                <tbody id="soc-users-table-body" class="divide-y divide-slate-100 font-sans">
+                  <!-- Rendered dynamically via App.renderSocUsers() -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Card Danh Sách Yêu Cầu Khôi Phục Mật Khẩu (Quên mật khẩu) -->
+          <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm space-y-3 p-5">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-100 pb-3">
+              <div>
+                <h4 class="text-sm font-extrabold text-slate-900 flex items-center space-x-2">
+                  <i class="fa-solid fa-key text-blue-600"></i>
+                  <span>Yêu Cầu Khôi Phục Mật Khẩu Chờ Admin Phê Duyệt</span>
+                </h4>
+                <p class="text-xs text-slate-500 mt-0.5">Người dùng gửi yêu cầu khi quên mật khẩu hoặc bị khóa. Admin phê duyệt và cấp Mã xác thực (OTP 6 số).</p>
+              </div>
+              <button onclick="App.loadPasswordResetRequests()" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold border border-slate-200 transition flex items-center space-x-1 self-start sm:self-auto">
+                <i class="fa-solid fa-arrows-rotate text-xs"></i>
+                <span>Tải lại</span>
+              </button>
+            </div>
+
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs text-slate-800">
+                <thead class="bg-slate-50 text-slate-600 uppercase font-bold border-b border-slate-200">
+                  <tr>
+                    <th class="px-4 py-3">Tài khoản yêu cầu</th>
+                    <th class="px-4 py-3">Lý do / Ghi chú</th>
+                    <th class="px-4 py-3">Thời gian gửi</th>
+                    <th class="px-4 py-3">Trạng thái & Mã OTP</th>
+                    <th class="px-4 py-3 text-right">Thao tác Admin</th>
+                  </tr>
+                </thead>
+                <tbody id="soc-resets-table-body" class="divide-y divide-slate-100 font-sans">
+                  <!-- Rendered dynamically via App.renderPasswordResetRequests() -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+
+      </main>
+
+    </div>
+
+  </div>
+
+
+  <!-- ===================================================================== -->
+  <!-- 3. CÁC HỘP THOẠI MODAL TƯƠNG TÁC (WHITE & BLUE STYLING) -->
+  <!-- ===================================================================== -->
+
+  <!-- MODAL XEM NỘI DUNG TỆP (RICH PREVIEW: ẢNH, VĂN BẢN, NHỊ PHÂN) -->
+  <div id="modal-preview" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop hidden">
+    <div class="bg-white border border-slate-200 rounded-2xl max-w-4xl w-full p-6 shadow-2xl space-y-4 flex flex-col max-h-[92vh]">
+      
+      <!-- Header -->
+      <div class="flex items-center justify-between border-b border-slate-200 pb-3 gap-2">
+        <div class="flex items-center space-x-2.5 truncate">
+          <div id="preview-icon-wrap" class="w-8 h-8 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600 flex-shrink-0">
+            <i id="preview-icon" class="fa-solid fa-file-lines text-base"></i>
+          </div>
+          <div class="truncate">
+            <div class="flex items-center space-x-2">
+              <span id="preview-filename" class="font-mono text-sm text-slate-900 font-bold truncate">filename.txt</span>
+              <span id="preview-type-badge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">TEXT</span>
+            </div>
+            <div class="text-[11px] text-slate-500 font-mono">
+              <span id="preview-size">0 KB</span> • <span id="preview-path" class="text-slate-400">/</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-2 flex-shrink-0">
+          <button id="preview-edit-btn" onclick="App.editCurrentPreview()" class="hidden px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 text-xs font-semibold transition flex items-center space-x-1.5" title="Chỉnh sửa tệp văn bản này">
+            <i class="fa-solid fa-pen-to-square"></i>
+            <span>Chỉnh sửa</span>
+          </button>
+
+          <button id="preview-download-btn" onclick="App.downloadCurrentPreview()" class="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow transition flex items-center space-x-1.5" title="Tải tệp tin về thiết bị của bạn">
+            <i class="fa-solid fa-download"></i>
+            <span>Tải xuống</span>
+          </button>
+
+          <button onclick="App.hideModal('modal-preview')" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition">
+            <i class="fa-solid fa-xmark text-lg"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Preview Body (Tự động thích ứng với Ảnh, Văn Bản hoặc Nhị Phân) -->
+      <div class="flex-1 overflow-auto min-h-[220px] max-h-[60vh] flex flex-col justify-center">
+        <!-- 1. Vùng hiển thị Ảnh -->
+        <div id="preview-image-wrap" class="hidden w-full flex items-center justify-center bg-slate-50 rounded-xl p-4 border border-slate-200">
+          <img id="preview-image" src="" alt="Hình ảnh xem trước" class="max-h-[52vh] max-w-full rounded-lg object-contain shadow-sm border border-slate-200 bg-white" />
+        </div>
+
+        <!-- 2. Vùng hiển thị Văn bản / Mã nguồn -->
+        <pre id="preview-content" class="bg-slate-50 p-4 rounded-xl text-xs font-mono text-slate-900 overflow-auto border border-slate-200 whitespace-pre-wrap leading-relaxed select-text flex-1"></pre>
+
+        <!-- 3. Vùng hiển thị Tệp tin Nhị phân / Không hỗ trợ xem trực tiếp -->
+        <div id="preview-binary-wrap" class="hidden py-10 px-6 flex flex-col items-center justify-center text-center bg-slate-50 rounded-xl border border-slate-200 space-y-3">
+          <div class="w-16 h-16 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center text-3xl shadow-sm">
+            <i id="preview-binary-icon" class="fa-solid fa-file-shield"></i>
+          </div>
+          <div>
+            <div class="font-bold text-slate-900 text-sm">Tệp Tin Định Dạng Nhị Phân Bảo Mật</div>
+            <div class="text-xs text-slate-500 max-w-md mt-1">Định dạng tệp này không hiển thị dưới dạng văn bản thuần. Nhấn nút tải xuống để mở trực tiếp bằng ứng dụng trên máy tính của bạn.</div>
+          </div>
+          <button onclick="App.downloadCurrentPreview()" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/25 transition flex items-center space-x-2">
+            <i class="fa-solid fa-download"></i>
+            <span>Tải Xuống Tệp Để Mở</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Metadata & Security Footer -->
+      <div class="pt-3 border-t border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between text-[11px] text-slate-500 gap-2">
+        <div class="flex items-center space-x-3 font-mono">
+          <span>Người tải: <strong id="preview-meta-uploader" class="text-slate-800 font-semibold">system</strong></span>
+          <span>•</span>
+          <span>Cập nhật: <span id="preview-meta-date" class="text-slate-800 font-semibold">-</span></span>
+          <span class="hidden md:inline">•</span>
+          <span class="hidden md:inline truncate max-w-[220px]" title="Mã băm SHA-256">SHA: <span id="preview-meta-sha" class="text-blue-600 font-mono">-</span></span>
+        </div>
+        <div class="flex items-center space-x-1.5 text-emerald-600 font-semibold">
+          <i class="fa-solid fa-shield-virus"></i>
+          <span>Antivirus: An Toàn (Clean)</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MODAL BẢNG TRA CỨU PHÂN QUYỀN & VAI TRÒ HỆ THỐNG -->
+  <div id="modal-roles-guide" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop hidden">
+    <div class="bg-white border border-slate-200 rounded-2xl max-w-3xl w-full p-6 shadow-2xl space-y-4 flex flex-col max-h-[90vh]">
+      <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+        <div class="flex items-center space-x-2.5">
+          <div class="w-8 h-8 rounded-xl bg-purple-50 border border-purple-200 flex items-center justify-center text-purple-600 font-bold">
+            <i class="fa-solid fa-users-gear text-sm"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-sm text-slate-900">Bảng Phân Quyền & Vai Trò Hệ Thống (RBAC Matrix)</h3>
+            <p class="text-[11px] text-slate-500">Mỗi tài khoản được cấp quyền và nhiệm vụ riêng biệt theo mô hình bảo mật</p>
+          </div>
+        </div>
+        <button onclick="App.hideModal('modal-roles-guide')" class="text-slate-400 hover:text-slate-600 p-1">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div class="overflow-y-auto space-y-4 text-xs pr-1">
+        
+        <!-- Role 1: ADMIN -->
+        <div class="p-3.5 rounded-xl border border-purple-200 bg-purple-50/40 space-y-2">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-purple-600"></span>
+              <span class="font-bold text-slate-900 text-sm">ADMIN: Quản Trị Viên Hệ Thống (@admin)</span>
+            </div>
+            <span class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-purple-100 text-purple-700 border border-purple-300">Toàn Quyền Quản Trị</span>
+          </div>
+          <p class="text-slate-600"><strong>Nhiệm vụ:</strong> Giám đốc An ninh Thông tin (CISO). Chịu trách nhiệm bảo vệ toàn bộ hạ tầng đám mây và dữ liệu công ty.</p>
+          <ul class="list-disc list-inside text-slate-700 space-y-1 pl-2">
+            <li><strong>Thư mục tệp tin:</strong> Toàn quyền Đọc, Ghi, Tải lên, Tạo, Sửa, Xóa trên tất cả thư mục (kể cả <code>/hr_confidential</code>).</li>
+            <li><strong>Trung tâm SOC (Độc quyền Admin):</strong> Giám sát toàn bộ Nhật ký SOC, quản trị Tường lửa IP, cấu hình Phân quyền ACL và Kho cách ly Antivirus.</li>
+          </ul>
+        </div>
+
+        <!-- Role 2: USER / STAFF -->
+        <div class="p-3.5 rounded-xl border border-blue-200 bg-blue-50/40 space-y-2">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span>
+              <span class="font-bold text-slate-900 text-sm">USER: Kỹ Sư / Nhân Viên Dự Án (@user)</span>
+            </div>
+            <span class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-blue-100 text-blue-700 border border-blue-300">Kỹ Sư Dự Án</span>
+          </div>
+          <p class="text-slate-600"><strong>Nhiệm vụ:</strong> Kỹ sư An ninh Cấp cao (Senior Security Engineer). Triển khai kỹ thuật và phát triển dự án lưu trữ.</p>
+          <ul class="list-disc list-inside text-slate-700 space-y-1 pl-2">
+            <li><strong>Thư mục <code>/projects</code>:</strong> Đọc & Ghi (Tạo tệp, tải lên, chỉnh sửa tài liệu dự án).</li>
+            <li><strong>Thư mục <code>/company_policies</code>:</strong> Chỉ Đọc (Xem và tải quy chế, không thể sửa hay xóa).</li>
+            <li><strong>Thư mục <code>/hr_confidential</code>:</strong> <span class="text-rose-600 font-bold">BỊ CHẶN TUYỆT ĐỐI (403 Forbidden)</span> - Không có thẩm quyền xem lương nhân sự.</li>
+            <li><strong>Menu SOC:</strong> Bị ẩn (Chỉ dành riêng cho Admin).</li>
+          </ul>
+        </div>
+
+        <!-- Role 3: GUEST / AUDITOR -->
+        <div class="p-3.5 rounded-xl border border-amber-200 bg-amber-50/40 space-y-2">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-amber-600"></span>
+              <span class="font-bold text-slate-900 text-sm">GUEST: Khách / Thực Tập Sinh Kiểm Toán (@guest)</span>
+            </div>
+            <span class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-100 text-amber-800 border border-amber-300">Thực Tập Sinh / Kiểm Toán</span>
+          </div>
+          <p class="text-slate-600"><strong>Nhiệm vụ:</strong> Thực tập sinh Nghiên cứu An ninh & Khách kiểm toán viên. Thẩm định tài liệu được phân quyền.</p>
+          <ul class="list-disc list-inside text-slate-700 space-y-1 pl-2">
+            <li><strong>Thư mục <code>/projects</code> & <code>/company_policies</code>:</strong> Chỉ Đọc (Chỉ được xem tài liệu, không được tải lên, sửa hay xóa).</li>
+            <li><strong>Thư mục <code>/hr_confidential</code>:</strong> <span class="text-rose-600 font-bold">BỊ CHẶN TUYỆT ĐỐI (403 Forbidden)</span>.</li>
+            <li><strong>Menu SOC:</strong> Bị ẩn.</li>
+          </ul>
+        </div>
+
+      </div>
+
+      <div class="pt-3 border-t border-slate-200 flex justify-end">
+        <button onclick="App.hideModal('modal-roles-guide')" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow transition">
+          Đã Hiểu
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL CHỈNH SỬA TỆP TIN VĂN BẢN (EDIT) -->
+  <div id="modal-edit" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop hidden">
+    <div class="bg-white border border-slate-200 rounded-2xl max-w-3xl w-full p-6 shadow-2xl space-y-4 flex flex-col max-h-[90vh]">
+      <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+        <div class="flex items-center space-x-2.5">
+          <i class="fa-solid fa-pen-to-square text-amber-500 text-lg"></i>
+          <span class="text-sm font-bold text-slate-900">Chỉnh sửa tệp từ xa:</span>
+          <span id="edit-filename" class="font-mono text-xs text-slate-500 font-medium">file.txt</span>
+        </div>
+        <button onclick="App.hideModal('modal-edit')" class="text-slate-400 hover:text-slate-600">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div class="text-xs text-slate-500">
+        Nội dung sẽ được kiểm tra <span class="text-amber-600 font-bold">Quyền Ghi ACL</span> và quét qua <span class="text-blue-600 font-bold">Antivirus Scanner</span> khi lưu.
+      </div>
+
+      <textarea id="edit-content" rows="16" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-4 text-xs font-mono text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 leading-relaxed"></textarea>
+
+      <div class="flex justify-end space-x-2 pt-2">
+        <button onclick="App.hideModal('modal-edit')" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium transition">
+          Hủy bỏ
+        </button>
+        <button onclick="App.saveFileEdit()" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow transition flex items-center space-x-1.5">
+          <i class="fa-solid fa-floppy-disk"></i>
+          <span>Lưu Thay Đổi</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL TẢI TỆP LÊN (UPLOAD) -->
+  <div id="modal-upload" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop hidden">
+    <div class="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+        <h3 class="text-base font-bold text-slate-900 flex items-center space-x-2">
+          <i class="fa-solid fa-cloud-arrow-up text-blue-600"></i>
+          <span>Tải tệp tin lên máy chủ</span>
+        </h3>
+        <button onclick="App.hideModal('modal-upload')" class="text-slate-400 hover:text-slate-600">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Thư mục đích</label>
+          <input type="text" id="upload-target-path" readonly class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-mono text-slate-700">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Chọn tệp tin</label>
+          <input type="file" id="upload-file-input" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-700 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer">
+        </div>
+
+        <div class="p-3 bg-blue-50 border border-blue-100 rounded-xl text-xs text-blue-800 space-y-1">
+          <div class="font-bold flex items-center space-x-1.5">
+            <i class="fa-solid fa-shield-virus"></i>
+            <span>Quy trình Antivirus 4 bước tự động:</span>
+          </div>
+          <div class="text-[11px] text-slate-600">1. Đuôi file • 2. Header Magic Bytes • 3. Mã băm SHA-256 • 4. EICAR & Heuristics</div>
+        </div>
+
+        <button onclick="App.handleFileUpload()" id="btn-upload-confirm" class="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-md shadow-blue-500/25 transition">
+          Xác nhận Tải Lên
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL TẠO TỆP MỚI -->
+  <div id="modal-new-file" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop hidden">
+    <div class="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+        <h3 class="text-base font-bold text-slate-900 flex items-center space-x-2">
+          <i class="fa-solid fa-file-circle-plus text-blue-600"></i>
+          <span>Tạo Tệp Tin Văn Bản Mới</span>
+        </h3>
+        <button onclick="App.hideModal('modal-new-file')" class="text-slate-400 hover:text-slate-600">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Tên tệp tin (kèm đuôi)</label>
+          <input type="text" id="new-file-name" placeholder="ví dụ: baocao.txt, ghi_chu.md" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Nội dung khởi tạo</label>
+          <textarea id="new-file-content" rows="6" placeholder="Nhập nội dung văn bản..." class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-xs font-mono text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+        </div>
+        <button onclick="App.handleCreateFile()" class="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow transition">
+          Tạo Tệp Tin
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL TẠO THƯ MỤC MỚI -->
+  <div id="modal-new-folder" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop hidden">
+    <div class="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+        <h3 class="text-base font-bold text-slate-900 flex items-center space-x-2">
+          <i class="fa-solid fa-folder-plus text-amber-500"></i>
+          <span>Tạo Thư Mục Mới</span>
+        </h3>
+        <button onclick="App.hideModal('modal-new-folder')" class="text-slate-400 hover:text-slate-600">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Tên thư mục</label>
+          <input type="text" id="new-folder-name" placeholder="ví dụ: du_an_2026, tai_lieu" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <button onclick="App.handleCreateFolder()" class="w-full py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs shadow transition">
+          Tạo Thư Mục
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL THÊM QUY TẮC FIREWALL -->
+  <div id="modal-fw-rule" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop hidden">
+    <div class="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+        <h3 class="text-base font-bold text-slate-900 flex items-center space-x-2">
+          <i class="fa-solid fa-fire text-rose-500"></i>
+          <span>Thêm Quy Tắc Lọc IP Firewall</span>
+        </h3>
+        <button onclick="App.hideModal('modal-fw-rule')" class="text-slate-400 hover:text-slate-600">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Địa chỉ IP</label>
+          <input type="text" id="fw-new-ip" placeholder="ví dụ: 192.168.1.100" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 font-mono focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-500">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Loại quy tắc</label>
+          <select id="fw-new-type" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 font-medium">
+            <option value="BLACKLIST">BLACKLIST (Chặn truy cập)</option>
+            <option value="WHITELIST">WHITELIST (Cho phép truy cập)</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Lý do</label>
+          <input type="text" id="fw-new-reason" placeholder="ví dụ: IP nghi ngờ quét cổng trái phép" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900">
+        </div>
+        <button onclick="App.handleAddFirewallRule()" class="w-full py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs shadow transition">
+          Áp dụng Quy Tắc
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL CẤU HÌNH QUY TẮC ACL -->
+  <div id="modal-acl-rule" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop hidden">
+    <div class="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+        <h3 class="text-base font-bold text-slate-900 flex items-center space-x-2">
+          <i class="fa-solid fa-key text-amber-500"></i>
+          <span>Cấu hình Phân quyền ACL</span>
+        </h3>
+        <button onclick="App.hideModal('modal-acl-rule')" class="text-slate-400 hover:text-slate-600">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Đường dẫn tài nguyên</label>
+          <input type="text" id="acl-new-path" placeholder="ví dụ: /projects hoặc /hr_confidential" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 font-mono">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Áp dụng theo Vai trò (Role)</label>
+          <select id="acl-new-role" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 font-medium">
+            <option value="USER">USER (Người dùng tiêu chuẩn)</option>
+            <option value="GUEST">GUEST (Khách / Thực tập sinh)</option>
+            <option value="ADMIN">ADMIN (Quản trị viên)</option>
+          </select>
+        </div>
+
+        <div class="border-t border-slate-200 pt-3 space-y-2">
+          <div class="text-xs font-bold text-slate-700">Các quyền hạn:</div>
+          <label class="flex items-center space-x-2 text-xs text-slate-800 cursor-pointer">
+            <input type="checkbox" id="acl-can-read" checked class="rounded bg-slate-100 border-slate-300 text-blue-600">
+            <span>Quyền Đọc (Xem & Tải xuống)</span>
+          </label>
+          <label class="flex items-center space-x-2 text-xs text-slate-800 cursor-pointer">
+            <input type="checkbox" id="acl-can-write" class="rounded bg-slate-100 border-slate-300 text-blue-600">
+            <span>Quyền Ghi (Tạo tệp, Tải lên & Sửa)</span>
+          </label>
+          <label class="flex items-center space-x-2 text-xs text-slate-800 cursor-pointer">
+            <input type="checkbox" id="acl-can-delete" class="rounded bg-slate-100 border-slate-300 text-blue-600">
+            <span>Quyền Xóa tài nguyên</span>
+          </label>
+          <label class="flex items-center space-x-2 text-xs text-rose-600 font-bold cursor-pointer">
+            <input type="checkbox" id="acl-is-deny" class="rounded bg-slate-100 border-slate-300 text-rose-600">
+            <span>Cấm tuyệt đối (Explicit Deny - Ưu tiên cao nhất)</span>
+          </label>
+        </div>
+
+        <button onclick="App.handleSaveACLRule()" class="w-full py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs shadow transition">
+          Lưu Quy Tắc ACL
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL ĐĂNG KÝ TÀI KHOẢN MỚI (CHỜ ADMIN DUYỆT) -->
+  <div id="modal-register" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop hidden">
+    <div class="bg-white border border-slate-200 rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl space-y-5 flex flex-col max-h-[92vh] overflow-y-auto">
+      
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+        <div class="flex items-center space-x-2.5">
+          <div class="w-9 h-9 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600 font-bold">
+            <i class="fa-solid fa-user-plus text-base"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-extrabold text-slate-900">Đăng Ký Tài Khoản Mới</h3>
+            <p class="text-xs text-slate-500">Tạo tài khoản truy cập kho dữ liệu lưu trữ bảo mật</p>
+          </div>
+        </div>
+        <button onclick="App.hideModal('modal-register')" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <!-- Banner Cảnh Báo Quy Trình Phê Duyệt -->
+      <div class="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-800 space-y-1">
+        <div class="font-bold flex items-center space-x-1.5 text-amber-900">
+          <i class="fa-solid fa-shield-halved text-amber-600"></i>
+          <span>Quy trình kiểm soát an ninh Enterprise:</span>
+        </div>
+        <p>Tài khoản sau khi gửi yêu cầu sẽ có trạng thái <strong>CHỜ DUYỆT (PENDING)</strong>. <strong>Quản trị viên (Admin)</strong> phải phê duyệt thì bạn mới có thể đăng nhập vào hệ thống.</p>
+      </div>
+
+      <!-- Form Đăng Ký -->
+      <form onsubmit="App.handleRegisterForm(event)" class="space-y-4">
+        
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Tên đăng nhập (Username) <span class="text-rose-500">*</span></label>
+          <input type="text" id="reg-username" required placeholder="ví dụ: tranvanan, nguyenb" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+          <p class="text-[11px] text-slate-400 mt-0.5">Tối thiểu 3 ký tự, không dấu cách</p>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Họ và tên hiển thị <span class="text-rose-500">*</span></label>
+          <input type="text" id="reg-fullname" required placeholder="ví dụ: Trần Văn An" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+        </div>
+
+        <!-- Chọn Vai Trò Phân Quyền (RBAC) -->
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5">Chọn vai trò phân quyền mong muốn <span class="text-rose-500">*</span></label>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            
+            <label class="relative flex flex-col p-3 rounded-xl border border-blue-200 bg-blue-50/50 hover:bg-blue-50 cursor-pointer transition">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                  <input type="radio" name="reg-role" value="USER" checked class="text-blue-600 focus:ring-blue-500">
+                  <span class="text-xs font-bold text-slate-900">Kỹ Sư (USER)</span>
+                </div>
+                <span class="text-[10px] font-bold px-1.5 py-0.2 rounded bg-blue-100 text-blue-700">Đọc/Ghi</span>
+              </div>
+              <p class="text-[11px] text-slate-500 mt-1 pl-5">Đọc & ghi tại /projects, chỉ đọc tại /company_policies. Cấm tuyệt đối tại /hr_confidential.</p>
+            </label>
+
+            <label class="relative flex flex-col p-3 rounded-xl border border-slate-200 bg-slate-50/60 hover:bg-slate-100 cursor-pointer transition">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                  <input type="radio" name="reg-role" value="GUEST" class="text-blue-600 focus:ring-blue-500">
+                  <span class="text-xs font-bold text-slate-900">Khách (GUEST)</span>
+                </div>
+                <span class="text-[10px] font-bold px-1.5 py-0.2 rounded bg-amber-100 text-amber-800">Chỉ đọc</span>
+              </div>
+              <p class="text-[11px] text-slate-500 mt-1 pl-5">Chỉ xem tài liệu tại /projects và /company_policies. Không có quyền ghi hoặc tải tệp lên.</p>
+            </label>
+
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Mật khẩu <span class="text-rose-500">*</span></label>
+            <input type="password" id="reg-password" required placeholder="••••••••" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Xác nhận mật khẩu <span class="text-rose-500">*</span></label>
+            <input type="password" id="reg-confirm-password" required placeholder="••••••••" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Mục đích sử dụng / Ghi chú gửi Admin</label>
+          <input type="text" id="reg-reason" placeholder="ví dụ: Đăng ký tham gia phát triển dự án LTM" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+        </div>
+
+        <div id="reg-error-msg" class="hidden p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700 font-medium"></div>
+
+        <div class="pt-2 flex items-center justify-end space-x-2">
+          <button type="button" onclick="App.hideModal('modal-register')" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition">
+            Hủy Bỏ
+          </button>
+          <button type="submit" id="btn-reg-submit" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xs font-bold shadow-md shadow-blue-500/20 transition flex items-center space-x-2">
+            <i class="fa-solid fa-paper-plane"></i>
+            <span>Gửi Yêu Cầu Đăng Ký</span>
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL QUÊN MẬT KHẨU / KHÔI PHỤC TÀI KHOẢN (2 BƯỚC: YÊU CẦU & NHẬP MÃ ADMIN) -->
+  <div id="modal-forgot-password" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop hidden">
+    <div class="bg-white border border-slate-200 rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl space-y-4">
+      
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+        <div class="flex items-center space-x-2.5">
+          <div class="w-9 h-9 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600 font-bold">
+            <i class="fa-solid fa-key text-base"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-extrabold text-slate-900">Khôi Phục Mật Khẩu</h3>
+            <p class="text-xs text-slate-500">Quy trình duyệt cấp mã an toàn từ Quản trị viên</p>
+          </div>
+        </div>
+        <button onclick="App.hideModal('modal-forgot-password')" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <!-- Tab Chuyển Bước: Bước 1 (Gửi yêu cầu) / Bước 2 (Nhập mã & Đặt lại) -->
+      <div class="grid grid-cols-2 p-1 rounded-xl bg-slate-100 text-xs font-bold text-slate-600">
+        <button type="button" id="tab-btn-forgot-step1" onclick="App.switchForgotStep(1)" class="py-2 rounded-lg bg-white text-blue-700 shadow-sm transition flex items-center justify-center space-x-1.5">
+          <span>1. Gửi Yêu Cầu</span>
+        </button>
+        <button type="button" id="tab-btn-forgot-step2" onclick="App.switchForgotStep(2)" class="py-2 rounded-lg text-slate-600 hover:text-slate-900 transition flex items-center justify-center space-x-1.5">
+          <span>2. Nhập Mã & Đặt Lại</span>
+        </button>
+      </div>
+
+      <!-- BƯỚC 1: GỬI YÊU CẦU CHO ADMIN DUYỆT -->
+      <div id="forgot-step-1" class="space-y-4">
+        <div class="p-3.5 rounded-xl bg-blue-50 border border-blue-200 text-xs text-blue-900 space-y-1">
+          <div class="font-bold flex items-center space-x-1.5">
+            <i class="fa-solid fa-shield-halved text-blue-600"></i>
+            <span>Quy Trình Xác Thực An Toàn:</span>
+          </div>
+          <p>Nhập tên tài khoản để gửi yêu cầu đến <strong>Quản trị viên (Admin)</strong>. Sau khi Admin duyệt, bạn sẽ nhận được <strong>Mã xác thực khôi phục (6 chữ số)</strong> để đặt lại mật khẩu mới.</p>
+        </div>
+
+        <form onsubmit="App.handleForgotPasswordRequestForm(event)" class="space-y-3.5">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Tên đăng nhập tài khoản <span class="text-rose-500">*</span></label>
+            <input type="text" id="forgot-step1-username" required placeholder="Nhập tên đăng nhập của bạn" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Lý do yêu cầu (Tùy chọn)</label>
+            <input type="text" id="forgot-step1-reason" placeholder="Ví dụ: Quên mật khẩu, tài khoản bị khóa do nhập sai..." class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+          </div>
+
+          <div id="forgot-step1-msg" class="hidden p-3 rounded-xl text-xs font-medium"></div>
+
+          <div class="pt-2 flex items-center justify-between">
+            <button type="button" onclick="App.switchForgotStep(2)" class="text-xs text-blue-600 hover:text-blue-800 font-semibold underline">
+              Tôi đã có mã từ Admin →
+            </button>
+            <button type="submit" id="btn-forgot-step1-submit" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/20 transition flex items-center space-x-2">
+              <i class="fa-solid fa-paper-plane"></i>
+              <span>Gửi Yêu Cầu Cho Admin</span>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- BƯỚC 2: NHẬP MÃ XÁC THỰC DO ADMIN CẤP VÀ ĐẶT LẠI MẬT KHẨU -->
+      <div id="forgot-step-2" class="space-y-4 hidden">
+        <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-700 space-y-1">
+          <div class="font-bold text-slate-900 flex items-center space-x-1.5">
+            <i class="fa-solid fa-key text-blue-600"></i>
+            <span>Nhập Mã Xác Thực & Mật Khẩu Mới:</span>
+          </div>
+          <p>Nhập mã số xác thực gồm <strong>6 chữ số</strong> do Quản trị viên (Admin) phê duyệt cấp cho bạn và thiết lập mật khẩu mới.</p>
+        </div>
+
+        <form onsubmit="App.handleForgotPasswordConfirmForm(event)" class="space-y-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Tên đăng nhập tài khoản <span class="text-rose-500">*</span></label>
+            <input type="text" id="forgot-step2-username" required placeholder="Nhập tên đăng nhập" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Mã xác thực do Admin cấp (6 chữ số) <span class="text-rose-500">*</span></label>
+            <input type="text" id="forgot-step2-code" required placeholder="Nhập mã xác thực (VD: 582914)" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-xs text-slate-900 font-mono tracking-widest text-center text-sm font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Mật khẩu mới <span class="text-rose-500">*</span></label>
+            <input type="password" id="forgot-step2-password" required placeholder="Nhập mật khẩu mới (tối thiểu 4 ký tự)" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Xác nhận mật khẩu mới <span class="text-rose-500">*</span></label>
+            <input type="password" id="forgot-step2-confirm" required placeholder="Nhập lại mật khẩu mới" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2 text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+          </div>
+
+          <div id="forgot-step2-msg" class="hidden p-3 rounded-xl text-xs font-medium"></div>
+
+          <div class="pt-1 flex items-center justify-between">
+            <button type="button" onclick="App.switchForgotStep(1)" class="text-xs text-slate-500 hover:text-slate-800 font-semibold">
+              ← Quay lại Bước 1
+            </button>
+            <button type="submit" id="btn-forgot-step2-submit" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/20 transition flex items-center space-x-2">
+              <i class="fa-solid fa-unlock"></i>
+              <span>Xác Thực & Đặt Lại</span>
+            </button>
+          </div>
+        </form>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MODAL ADMIN HIỂN THỊ MÃ XÁC THỰC SAU KHI PHÊ DUYỆT -->
+  <div id="modal-admin-otp-display" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop hidden">
+    <div class="bg-white border border-slate-200 rounded-3xl max-w-sm w-full p-6 shadow-2xl text-center space-y-4">
+      <div class="w-14 h-14 mx-auto rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600">
+        <i class="fa-solid fa-circle-check text-2xl"></i>
+      </div>
+      <div>
+        <h3 class="text-base font-extrabold text-slate-900">Đã Phê Duyệt Cấp Mã!</h3>
+        <p class="text-xs text-slate-500 mt-1">Cấp mã khôi phục cho tài khoản <strong id="admin-otp-username" class="text-blue-700 font-mono">@user</strong></p>
+      </div>
+      <div class="p-4 rounded-2xl bg-blue-50 border border-blue-200">
+        <div class="text-[11px] font-bold text-blue-800 uppercase tracking-wider mb-1">Mã Xác Thực Khôi Phục (OTP):</div>
+        <div id="admin-otp-code-value" class="text-3xl font-mono font-black text-blue-700 tracking-widest my-1 select-all">------</div>
+        <div class="text-[11px] text-blue-600">Mã có hiệu lực cho 1 lần đặt lại mật khẩu</div>
+      </div>
+      <div class="flex items-center space-x-2 pt-1">
+        <button type="button" onclick="App.copyAdminOtpCode()" class="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md transition flex items-center justify-center space-x-1.5">
+          <i class="fa-regular fa-copy"></i>
+          <span>Sao Chép Mã</span>
+        </button>
+        <button type="button" onclick="App.hideModal('modal-admin-otp-display')" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition">
+          Đóng
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL ADMIN ĐẶT LẠI MẬT KHẨU -->
+  <div id="modal-admin-reset-pwd" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop hidden">
+    <div class="bg-white border border-slate-200 rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+        <h3 class="text-sm font-bold text-slate-900 flex items-center space-x-2">
+          <i class="fa-solid fa-key text-blue-600"></i>
+          <span>Admin Đặt Lại Mật Khẩu</span>
+        </h3>
+        <button onclick="App.hideModal('modal-admin-reset-pwd')" class="text-slate-400 hover:text-slate-600">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3">
+        <p class="text-xs text-slate-600">Đang đặt lại mật khẩu cho tài khoản: <strong id="admin-reset-username-display" class="font-mono text-blue-700"></strong></p>
+        <input type="hidden" id="admin-reset-username">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Mật khẩu mới</label>
+          <input type="password" id="admin-reset-new-pass" placeholder="••••••••" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <button onclick="App.handleAdminResetPasswordSubmit()" class="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow transition">
+          Lưu Mật Khẩu Mới
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL ADMIN KHÓA TÀI KHOẢN -->
+  <div id="modal-admin-lock-user" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop hidden">
+    <div class="bg-white border border-slate-200 rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+        <h3 class="text-sm font-bold text-slate-900 flex items-center space-x-2">
+          <i class="fa-solid fa-user-lock text-rose-600"></i>
+          <span>Khóa Tài Khoản Người Dùng</span>
+        </h3>
+        <button onclick="App.hideModal('modal-admin-lock-user')" class="text-slate-400 hover:text-slate-600">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3">
+        <p class="text-xs text-slate-600">Xác nhận khóa truy cập tài khoản: <strong id="admin-lock-username-display" class="font-mono text-rose-700"></strong></p>
+        <input type="hidden" id="admin-lock-username">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Lý do khóa</label>
+          <input type="text" id="admin-lock-reason" placeholder="ví dụ: Vi phạm quy định an toàn thông tin" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-500">
+        </div>
+        <button onclick="App.handleAdminLockUserSubmit()" class="w-full py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs shadow transition">
+          Khóa Tài Khoản Này
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATIONS POPUP -->
+  <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col space-y-2 max-w-sm pointer-events-none"></div>
+
+  <!-- SCRIPTS -->
+  <script src="/static/js/api.js"></script>
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
